@@ -37,7 +37,7 @@ router.put('/profile', protect, upload.single('logo'), async (req, res) => {
       updates.pdfColor = req.body.pdfColor;
     }
     console.log('PROFILE UPDATE - updates:', updates);
-    if (req.file) updates.logo = `/uploads/${req.file.filename}`;
+    if (req.file) updates.logo = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
     if (req.body.password) {
       const bcrypt = require('bcryptjs');
       updates.password = await bcrypt.hash(req.body.password, 12);

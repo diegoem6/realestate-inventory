@@ -167,7 +167,8 @@ router.post('/:id/ambientes/:ambienteId/archivos', upload.array('archivos', 20),
 
     const newFiles = req.files.map(f => ({
       nombre: f.originalname,
-      url: `/uploads/${f.filename}`,
+      url: `${process.env.BASE_URL}/uploads/${f.filename}`,
+//      url: `/uploads/${f.filename}`,
       tipo: f.mimetype.startsWith('image/') ? 'image' : 'file',
       mimetype: f.mimetype,
       size: f.size,
@@ -240,8 +241,9 @@ router.post('/:id/ambientes/:ambienteId/analizar-ia', async (req, res) => {
           contentType = response.headers['content-type'] || mimeFromExt(foto.nombre);
         } else {
           // Ruta local: /uploads/archivo.jpg → leer del disco
-          const filename = (foto.url || foto.nombre || '').replace(/^\/uploads\//, '');
-          const filePath = pathMod.join(uploadsDir, filename);
+          //const filename = (foto.url || foto.nombre || '').replace(/^\/uploads\//, '');
+	const filename = (foto.url || foto.nombre || '').replace(/^.*\/uploads\//, '');          
+	const filePath = pathMod.join(uploadsDir, filename);
           if (!fsSync.existsSync(filePath)) {
             console.warn('Archivo no encontrado en disco:', filePath);
             continue;

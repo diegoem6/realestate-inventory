@@ -22,7 +22,7 @@ router.post('/', upload.single('logo'), async (req, res) => {
   try {
     const { username, nombre, apellido, email, celular, password } = req.body;
     const userData = { username, nombre, apellido, email, celular, password, rol: 'inmobiliaria' };
-    if (req.file) userData.logo = `/uploads/${req.file.filename}`;
+    if (req.file) userData.logo = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
     const user = await User.create(userData);
     res.status(201).json(user);
   } catch (err) {
@@ -37,7 +37,7 @@ router.put('/:id', upload.single('logo'), async (req, res) => {
     const updates = {};
     const fields = ['nombre', 'apellido', 'email', 'celular', 'activo'];
     fields.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f]; });
-    if (req.file) updates.logo = `/uploads/${req.file.filename}`;
+    if (req.file) updates.logo = `${process.env.BASE_URL}/uploads/${req.file.filename}`;
     if (req.body.password) {
       const bcrypt = require('bcryptjs');
       updates.password = await bcrypt.hash(req.body.password, 12);

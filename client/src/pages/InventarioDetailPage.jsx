@@ -61,7 +61,9 @@ const InventarioDetailPage = () => {
     try {
       // Usamos fetch con el token para poder recibir el blob
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/inventarios/${id}/pdf`, {
+      
+//const response = await fetch(${process.env.REACT_APP_API_URL.replace('/api', '')}/api/inventarios/${id}/pdf`, {
+const response = await fetch(`${process.env.REACT_APP_API_URL.replace('/api', '')}/api/inventarios/${id}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
