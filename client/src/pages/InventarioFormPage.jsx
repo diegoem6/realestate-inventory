@@ -675,9 +675,13 @@ const InventarioFormPage = () => {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {ambienteActual.tuplas?.map((tupla, ti) => (
                                 <div key={ti} className="tupla-row">
-                                  <span className="tupla-campo-label">
-                                    {tupla.campo || <em>Sin nombre</em>}
-                                  </span>
+                                  <input
+                                    className="form-control tupla-campo-label"
+                                    placeholder="Nombre del campo"
+                                    value={tupla.campo}
+                                    onChange={e => updateTupla(activeAmbiente, ti, 'campo', e.target.value)}
+                                    style={{ flex: '0 0 38%' }}
+                                  />
                                   <input
                                     className="form-control tupla-valor"
                                     placeholder="Valor"

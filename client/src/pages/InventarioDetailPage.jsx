@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ const InventarioDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeAmbiente, setActiveAmbiente] = useState(0);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const exportingRef = useRef(false);
   const [firmaModal, setFirmaModal] = useState(null); // 'arrendador' | 'arrendatario'
   const [savingFirma, setSavingFirma] = useState(false);
 
@@ -56,14 +57,15 @@ const InventarioDetailPage = () => {
   };
 
   const handleExportPDF = async () => {
+    // Guardia con ref para evitar doble llamada antes de que React actualice el estado
+    if (exportingRef.current) return;
+    exportingRef.current = true;
     setExportingPDF(true);
     const toastId = toast.loading('Generando PDF...');
     try {
-      // Usamos fetch con el token para poder recibir el blob
       const token = localStorage.getItem('token');
-      
-//const response = await fetch(${process.env.REACT_APP_API_URL.replace('/api', '')}/api/inventarios/${id}/pdf`, {
-const response = await fetch(`${process.env.REACT_APP_API_URL.replace('/api', '')}/api/inventarios/${id}/pdf`, {
+      const baseUrl = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : '';
+      const response = await fetch(`${baseUrl}/api/inventarios/${id}/pdf`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -73,22 +75,42 @@ const response = await fetch(`${process.env.REACT_APP_API_URL.replace('/api', ''
       }
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-
-      // Crear enlace temporal y disparar descarga
-      const a = document.createElement('a');
-      a.href = url;
       const filename = `inventario-${inv?.codigo || id}.pdf`;
+      const blobUrl = URL.createObjectURL(blob);
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      if (isMobile && navigator.share) {
+        // En móvil: usar Web Share API para compartir el archivo directamente.
+        // Esto evita el problema de duplicados al compartir por WhatsApp.
+        const file = new File([blob], filename, { type: 'application/pdf' });
+        toast.dismiss(toastId);
+        try {
+          await navigator.share({ files: [file], title: filename });
+        } catch (shareErr) {
+          // El usuario canceló el share o el browser no soporta compartir archivos:
+          // abrir en el visor como fallback.
+          if (shareErr.name !== 'AbortError') {
+            window.open(blobUrl, '_blank');
+          }
+        }
+        URL.revokeObjectURL(blobUrl);
+        return;
+      }
+
+      // Desktop (o móvil sin Web Share API): descarga directa
+      const a = document.createElement('a');
+      a.href = blobUrl;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      URL.revokeObjectURL(blobUrl);
       toast.success('PDF descargado', { id: toastId });
     } catch (err) {
       toast.error(err.message || 'Error al generar el PDF', { id: toastId });
     } finally {
+      exportingRef.current = false;
       setExportingPDF(false);
     }
   };
