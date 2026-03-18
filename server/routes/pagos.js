@@ -44,9 +44,7 @@ router.get('/paquetes', (_req, res) => {
 // POST /api/pagos/crear-pago
 router.post('/crear-pago', protect, async (req, res) => {
   try {
-    const { paqueteId, metodoPago } = req.body;
-    if (!metodoPago) return res.status(400).json({ message: 'Seleccioná un medio de pago' });
-
+    const { paqueteId } = req.body;
     const paquete = PAQUETES.find(p => p.id === paqueteId);
     if (!paquete) return res.status(400).json({ message: 'Paquete no válido' });
 
@@ -54,34 +52,36 @@ router.post('/crear-pago', protect, async (req, res) => {
     const apiUrl    = process.env.API_URL    || '';
     const isPublic  = apiUrl && !apiUrl.includes('localhost');
 
-    // order_id codifica userId + tokens para el webhook
+    // order_id codifica userId + tokens para recuperarlos en el webhook
     const orderId = `USR${req.user._id}TKN${paquete.tokens}T${Date.now()}`;
 
     const body = {
-      amount:              paquete.precio,
-      currency:            'UYU',
-      country:             'UY',
-      payment_method_id:   metodoPago,
-      payment_method_flow: 'REDIRECT',
-      payer: {
-        name:  req.user.nombre || req.user.name || req.user.email,
-        email: req.user.email,
-      },
-      order_id:     orderId,
-      description:  paquete.label,
-      // Si tenemos URL pública, el redirect pasa por el server (que luego manda al cliente localhost)
-      redirect_url: isPublic
+      amount:      paquete.precio,
+      currency:    'UYU',
+      country:     'UY',
+      order_id:    orderId,
+      description: paquete.label,
+      success_url: isPublic
         ? `${apiUrl}/api/pagos/redirect/exito`
         : `${clientUrl}/tokens/exito`,
+      back_url: isPublic
+        ? `${apiUrl}/api/pagos/redirect/cancelado`
+        : `${clientUrl}/tokens?cancelado=1`,
       ...(isPublic && { notification_url: `${apiUrl}/api/pagos/webhook` }),
     };
+
+    const login = process.env.DLOCAL_X_LOGIN || '';
+    const secret = process.env.DLOCAL_SECRET || '';
+    console.log('[dLocal] URL:', `${DLOCAL_BASE}/v1/payments`);
+    console.log('[dLocal] X_LOGIN (primeros 8):', login.slice(0, 8));
+    console.log('[dLocal] SECRET (primeros 8):', secret.slice(0, 8));
+    console.log('[dLocal] Auth header:', `Bearer ${login.slice(0,4)}...${login.slice(-4)}:${secret.slice(0,4)}...${secret.slice(-4)}`);
 
     const { data } = await axios.post(`${DLOCAL_BASE}/v1/payments`, body, {
       headers: dlocalHeaders(),
     });
 
-    // dLocal Go devuelve checkout_url para redirigir al usuario
-    res.json({ paymentId: data.id, redirectUrl: data.checkout_url || data.redirect_url, status: data.status });
+    res.json({ paymentId: data.id, redirectUrl: data.redirect_url, status: data.status });
   } catch (err) {
     console.error('Error dLocal crear-pago:', err.response?.data || err.message);
     res.status(500).json({ message: err.response?.data?.message || err.message });

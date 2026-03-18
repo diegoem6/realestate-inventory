@@ -95,6 +95,10 @@ async function generarInventarioPDF(inventario, usuario) {
   return new Promise(async (resolve, reject) => {
     try {
 
+      // Aplicar color del usuario (con fallback al color por defecto)
+      C.primary    = usuario?.pdfColor || '#1a3a2a';
+      C.primaryMid = usuario?.pdfColor || '#2d5a42';
+
       const doc = new PDFDocument({
         size: 'A4', autoFirstPage: true,
         margins: { top: 0, bottom: 0, left: 0, right: 0 },
