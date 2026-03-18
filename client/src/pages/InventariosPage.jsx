@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 async function descargarPDF(inv) {
   const toastId = toast.loading('Generando PDF...');
@@ -35,6 +36,8 @@ const InventariosPage = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const sinTokens = user?.rol !== 'admin' && (user?.tokens ?? 0) === 0;
 
   const fetchInventarios = useCallback(async () => {
     setLoading(true);
@@ -78,7 +81,13 @@ const InventariosPage = () => {
           <p className="page-subtitle">{total} inventario{total !== 1 ? 's' : ''} en total</p>
         </div>
         <div className="page-header-actions">
-          <Link to="/inventarios/nuevo" className="btn btn-primary">+ Nuevo</Link>
+          {sinTokens ? (
+            <Link to="/tokens" className="btn btn-outline" title="Necesitás tokens para crear inventarios">
+              🪙 Comprar tokens
+            </Link>
+          ) : (
+            <Link to="/inventarios/nuevo" className="btn btn-primary">+ Nuevo</Link>
+          )}
         </div>
       </div>
 
@@ -100,7 +109,10 @@ const InventariosPage = () => {
             <div className="empty-state-icon">📋</div>
             <h3>Sin resultados</h3>
             <p>{search ? 'No hay inventarios que coincidan con tu búsqueda' : 'Aún no hay inventarios creados'}</p>
-            {!search && <Link to="/inventarios/nuevo" className="btn btn-primary">Crear primer inventario</Link>}
+            {!search && (sinTokens
+              ? <Link to="/tokens" className="btn btn-outline">🪙 Comprar tokens para crear inventarios</Link>
+              : <Link to="/inventarios/nuevo" className="btn btn-primary">Crear primer inventario</Link>
+            )}
           </div>
         ) : (
           <>

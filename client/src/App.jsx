@@ -11,6 +11,8 @@ import InventarioDetailPage from './pages/InventarioDetailPage';
 import TemplatesPage from './pages/TemplatesPage';
 import UsersPage from './pages/UsersPage';
 import ProfilePage from './pages/ProfilePage';
+import TokensPage from './pages/TokensPage';
+import TokensSuccessPage from './pages/TokensSuccessPage';
 
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { user, loading } = useAuth();
@@ -35,6 +37,8 @@ const App = () => (
           <Route path="templates" element={<ProtectedRoute adminOnly><TemplatesPage /></ProtectedRoute>} />
           <Route path="usuarios" element={<ProtectedRoute adminOnly><UsersPage /></ProtectedRoute>} />
           <Route path="perfil" element={<ProfilePage />} />
+          <Route path="tokens" element={<TokensPage />} />
+          <Route path="tokens/exito" element={<TokensSuccessPage />} />
         </Route>
       </Routes>
     </AuthProvider>

@@ -70,6 +70,13 @@ const Layout = () => {
         .user-role { font-size: 0.72rem; color: rgba(255,255,255,0.5); text-transform: capitalize; }
         .logout-btn { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1.1rem; padding: 4px; border-radius: 4px; }
         .logout-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+        .token-badge {
+          display: inline-flex; align-items: center; gap: 4px;
+          background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.9);
+          border-radius: 20px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600;
+          margin-left: auto; flex-shrink: 0;
+        }
+        .token-badge.sin-tokens { background: rgba(239,68,68,0.25); color: #fca5a5; }
         .main-content { flex: 1; margin-left: 240px; min-height: 100vh; }
         .topbar {
           display: none; background: var(--primary); padding: 0.75rem 1rem;
@@ -109,6 +116,19 @@ const Layout = () => {
           <nav className="sidebar-nav">
             <NavItem to="/" icon="🏠" label="Dashboard" onClick={close} />
             <NavItem to="/inventarios" icon="📋" label="Inventarios" onClick={close} />
+            {user?.rol !== 'admin' && (
+              <NavLink
+                to="/tokens"
+                onClick={close}
+                className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+              >
+                <span className="nav-icon">🪙</span>
+                <span className="nav-label">Tokens</span>
+                <span className={`token-badge${(user?.tokens ?? 0) === 0 ? ' sin-tokens' : ''}`}>
+                  {user?.tokens ?? 0}
+                </span>
+              </NavLink>
+            )}
             {user?.rol === 'admin' && (
               <>
                 <div className="nav-section">Administración</div>

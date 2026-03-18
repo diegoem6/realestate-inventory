@@ -72,6 +72,13 @@ router.get('/:id', async (req, res) => {
 // POST /api/inventarios - create with default templates
 router.post('/', async (req, res) => {
   try {
+    // Los admins no consumen tokens
+    if (req.user.rol !== 'admin') {
+      if (req.user.tokens <= 0) {
+        return res.status(402).json({ message: 'Sin tokens disponibles. Comprá tokens para crear inventarios.', codigo: 'SIN_TOKENS' });
+      }
+    }
+
     const defaultTemplates = await Template.find({ esDefault: true }).sort({ orden: 1 });
     const ambientes = defaultTemplates.map((t, i) => ({
       nombre: t.nombre,
@@ -86,6 +93,13 @@ router.post('/', async (req, res) => {
       ambientes,
       creadoPor: req.user._id,
     });
+
+    // Descontar 1 token al usuario (excepto admins)
+    if (req.user.rol !== 'admin') {
+      const User = require('../models/User');
+      await User.findByIdAndUpdate(req.user._id, { $inc: { tokens: -1 } });
+    }
+
     res.status(201).json(inv);
   } catch (err) {
     res.status(500).json({ message: err.message });

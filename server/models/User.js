@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   celular: { type: String, trim: true },
   logo: { type: String }, // URL de la imagen
   pdfColor: { type: String, default: '#1a3a2a' }, // color base para PDFs
+  tokens: { type: Number, default: 0 },
   password: { type: String, required: true },
   rol: { type: String, enum: ['admin', 'inmobiliaria'], default: 'inmobiliaria' },
   activo: { type: Boolean, default: true },

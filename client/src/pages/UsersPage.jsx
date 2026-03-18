@@ -12,7 +12,10 @@ const UsersPage = () => {
   const [form, setForm] = useState(emptyUser);
   const [logoFile, setLogoFile] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); // user a eliminar
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [tokenModal, setTokenModal] = useState(null); // user al que cargar tokens
+  const [tokenAmount, setTokenAmount] = useState('');
+  const [savingTokens, setSavingTokens] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -81,6 +84,21 @@ const UsersPage = () => {
 
   const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
+  const handleAgregarTokens = async () => {
+    const cantidad = parseInt(tokenAmount, 10);
+    if (!cantidad || cantidad < 1) { toast.error('Ingresá una cantidad válida'); return; }
+    setSavingTokens(true);
+    try {
+      const res = await api.post('/pagos/admin/agregar-tokens', { userId: tokenModal._id, tokens: cantidad });
+      setUsers(prev => prev.map(u => u._id === tokenModal._id ? { ...u, tokens: res.data.tokens } : u));
+      toast.success(`+${cantidad} tokens cargados a ${tokenModal.nombre}`);
+      setTokenModal(null);
+      setTokenAmount('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error al cargar tokens');
+    } finally { setSavingTokens(false); }
+  };
+
   return (
     <div className="page-wrapper">
       <div className="page-header">
@@ -117,6 +135,8 @@ const UsersPage = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                   <span className={`badge badge-${u.activo ? 'success' : 'danger'}`}>{u.activo ? 'Activo' : 'Inactivo'}</span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg)', borderRadius: 6, padding: '2px 8px' }}>🪙 {u.tokens ?? 0}</span>
+                  <button className="btn btn-outline btn-sm" title="Cargar tokens" onClick={() => { setTokenModal(u); setTokenAmount(''); }}>+ Tokens</button>
                   <button className="btn btn-outline btn-sm" onClick={() => openEdit(u)}>✏️</button>
                   <button className={`btn btn-sm ${u.activo ? 'btn-ghost' : 'btn-accent'}`} onClick={() => handleToggleActive(u)} style={u.activo ? { color: 'var(--danger)' } : {}}>
                     {u.activo ? '⛔' : '✅'}
@@ -150,6 +170,42 @@ const UsersPage = () => {
               <button className="btn btn-outline" onClick={() => setConfirmDelete(null)}>Cancelar</button>
               <button className="btn btn-primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={handleDelete}>
                 Sí, eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tokenModal && (
+        <div className="modal-overlay" onClick={() => setTokenModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 380 }}>
+            <div className="modal-header">
+              <h3 style={{ fontFamily: 'var(--font-display)' }}>Cargar tokens</h3>
+              <button className="btn btn-ghost btn-sm" onClick={() => setTokenModal(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                Usuario: <strong>{tokenModal.nombre} {tokenModal.apellido}</strong><br />
+                Saldo actual: <strong style={{ color: 'var(--primary)' }}>🪙 {tokenModal.tokens ?? 0} tokens</strong>
+              </p>
+              <div className="form-group">
+                <label className="form-label">Cantidad a agregar</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  min="1"
+                  placeholder="Ej: 5"
+                  value={tokenAmount}
+                  onChange={e => setTokenAmount(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAgregarTokens()}
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setTokenModal(null)}>Cancelar</button>
+              <button className="btn btn-primary" onClick={handleAgregarTokens} disabled={savingTokens}>
+                {savingTokens ? '⏳ Guardando...' : '🪙 Agregar tokens'}
               </button>
             </div>
           </div>
