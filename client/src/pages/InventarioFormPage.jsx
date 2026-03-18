@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 // ── Fuera del componente para evitar pérdida de foco en cada render ──────────
 const InputField = ({ label, name, type = 'text', required, value, onChange, ...props }) => (
@@ -180,6 +181,7 @@ const styles = `
 
 const InventarioFormPage = () => {
   const { id } = useParams();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
@@ -239,6 +241,9 @@ const InventarioFormPage = () => {
         navigate(`/inventarios/${id}`);
       } else {
         const res = await api.post('/inventarios', form);
+        if (res.data.tokensRestantes !== null && res.data.tokensRestantes !== undefined) {
+          updateUser({ ...user, tokens: res.data.tokensRestantes });
+        }
         toast.success('Inventario creado');
         navigate(`/inventarios/${res.data._id}/editar`);
       }

@@ -95,12 +95,14 @@ router.post('/', async (req, res) => {
     });
 
     // Descontar 1 token al usuario (excepto admins)
+    let tokensRestantes = null;
     if (req.user.rol !== 'admin') {
       const User = require('../models/User');
-      await User.findByIdAndUpdate(req.user._id, { $inc: { tokens: -1 } });
+      const updated = await User.findByIdAndUpdate(req.user._id, { $inc: { tokens: -1 } }, { new: true });
+      tokensRestantes = updated.tokens;
     }
 
-    res.status(201).json(inv);
+    res.status(201).json({ ...inv.toObject(), tokensRestantes });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
