@@ -8,8 +8,8 @@ async function descargarPDF(inv) {
   const toastId = toast.loading('Generando PDF...');
   try {
     const token = localStorage.getItem('token');
-//    const response = await fetch('/api/inventarios/' process.env.REACT_APP_API_URL.replace('/api', '') + '/api/inventarios/' + inv._id + '/pdf', {
-const response = await fetch(process.env.REACT_APP_API_URL.replace('/api', '') + '/api/inventarios/' + inv._id + '/pdf', {
+const baseUrl = process.env.REACT_APP_API_URL ? process.env.REACT_APP_API_URL.replace('/api', '') : '';
+const response = await fetch(baseUrl + '/api/inventarios/' + inv._id + '/pdf', {
       headers: { Authorization: 'Bearer ' + token },
     });
     if (!response.ok) throw new Error('Error al generar el PDF');
