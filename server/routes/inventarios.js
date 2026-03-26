@@ -6,6 +6,24 @@ const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const path = require('path');
 const { generarInventarioPDF } = require('../utils/generarInventarioPDF');
+const sharp = require('sharp');
+
+const MAX_IMAGE_BYTES = 4.5 * 1024 * 1024; // 4.5 MB (límite Anthropic: 5 MB)
+
+async function comprimirImagenSiNecesario(buf, contentType) {
+  if (buf.length <= MAX_IMAGE_BYTES) return { buf, contentType };
+  // Comprimir progresivamente hasta quedar bajo el límite
+  let quality = 80;
+  let result = buf;
+  while (result.length > MAX_IMAGE_BYTES && quality >= 20) {
+    result = await sharp(buf)
+      .resize({ width: 2048, height: 2048, fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality })
+      .toBuffer();
+    quality -= 20;
+  }
+  return { buf: result, contentType: 'image/jpeg' };
+}
 
 router.use(protect);
 
@@ -181,10 +199,31 @@ router.post('/:id/ambientes/:ambienteId/archivos', upload.array('archivos', 20),
     const ambiente = inv.ambientes.id(req.params.ambienteId);
     if (!ambiente) return res.status(404).json({ message: 'Ambiente no encontrado' });
 
+    const fs = require('fs');
+    const pathMod2 = require('path');
+    const uploadsDir2 = pathMod2.join(__dirname, '..', process.env.UPLOADS_PATH || 'uploads');
+
+    // Normalizar imágenes a JPEG (resuelve fotos HEIC de iPhone y otros formatos no web)
+    for (const f of req.files) {
+      const isImage = f.mimetype.startsWith('image/') ||
+        /\.(heic|heif|jpg|jpeg|png|gif|webp)$/i.test(f.originalname);
+      if (!isImage) continue;
+      const oldPath = pathMod2.join(uploadsDir2, f.filename);
+      const newFilename = f.filename.replace(/\.[^.]+$/, '.jpg');
+      const newPath = pathMod2.join(uploadsDir2, newFilename);
+      try {
+        await sharp(oldPath).jpeg({ quality: 90 }).toFile(newPath);
+        if (oldPath !== newPath) fs.unlinkSync(oldPath);
+        f.filename = newFilename;
+        f.mimetype = 'image/jpeg';
+      } catch (e) {
+        console.warn('No se pudo normalizar imagen, se conserva original:', f.originalname, e.message);
+      }
+    }
+
     const newFiles = req.files.map(f => ({
       nombre: f.originalname,
-      url: `${process.env.BASE_URL}/uploads/${f.filename}`,
-//      url: `/uploads/${f.filename}`,
+      url: `/uploads/${f.filename}`,
       tipo: f.mimetype.startsWith('image/') ? 'image' : 'file',
       mimetype: f.mimetype,
       size: f.size,
@@ -267,6 +306,7 @@ router.post('/:id/ambientes/:ambienteId/analizar-ia', async (req, res) => {
           buf = fsSync.readFileSync(filePath);
           contentType = mimeFromExt(foto.nombre);
         }
+        ({ buf, contentType } = await comprimirImagenSiNecesario(buf, contentType));
         const b64 = buf.toString('base64');
         imageContents.push({ b64, contentType, nombre: foto.nombre });
       } catch (e) {

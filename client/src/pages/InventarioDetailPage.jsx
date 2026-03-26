@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api, { resolveFileUrl } from '../utils/api';
 import toast from 'react-hot-toast';
 import FirmaModal from '../components/FirmaModal';
 
@@ -249,13 +249,13 @@ const InventarioDetailPage = () => {
                       </label>
                       <div className="photo-grid" style={{ marginBottom: '0.8rem' }}>
                         {amb.archivos.filter(a => a.tipo === 'image').map(arch => (
-                          <a key={arch._id} href={arch.url} target="_blank" rel="noreferrer" className="photo-thumb">
-                            <img src={arch.url} alt={arch.nombre} />
+                          <a key={arch._id} href={resolveFileUrl(arch.url)} target="_blank" rel="noreferrer" className="photo-thumb">
+                            <img src={resolveFileUrl(arch.url)} alt={arch.nombre} />
                           </a>
                         ))}
                       </div>
                       {amb.archivos.filter(a => a.tipo !== 'image').map(arch => (
-                        <a key={arch._id} href={arch.url} target="_blank" rel="noreferrer"
+                        <a key={arch._id} href={resolveFileUrl(arch.url)} target="_blank" rel="noreferrer"
                           style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', background: 'var(--bg)', borderRadius: '6px', marginBottom: '4px', color: 'var(--primary)', textDecoration: 'none', fontSize: '0.88rem' }}>
                           📄 {arch.nombre}
                         </a>

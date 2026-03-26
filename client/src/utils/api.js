@@ -1,8 +1,19 @@
 import axios from 'axios';
 
+const API_BASE = process.env.REACT_APP_API_URL || '';
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || '/api',
+  baseURL: API_BASE ? `${API_BASE}/api` : '/api',
 });
+
+// Resuelve URLs de archivos: las relativas (/uploads/...) se completan con la URL del servidor
+export function resolveFileUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  // Arreglar URLs rotas del tipo "undefined/uploads/..."
+  const clean = url.replace(/^undefined\//, '/');
+  return API_BASE + (clean.startsWith('/') ? clean : `/${clean}`);
+}
 
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');

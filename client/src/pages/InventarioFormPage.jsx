@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '../utils/api';
+import api, { resolveFileUrl } from '../utils/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -720,7 +720,7 @@ const InventarioFormPage = () => {
                               <div className="photo-grid" style={{ marginBottom: '0.8rem' }}>
                                 {ambienteActual.archivos.filter(a => a.tipo === 'image').map(arch => (
                                   <div key={arch._id} className="photo-thumb">
-                                    <img src={arch.url} alt={arch.nombre} />
+                                    <img src={resolveFileUrl(arch.url)} alt={arch.nombre} />
                                     <button
                                       className="delete-btn"
                                       onClick={() => handleDeleteFile(ambienteActual._id, arch._id)}
@@ -736,7 +736,7 @@ const InventarioFormPage = () => {
                             {ambienteActual.archivos?.filter(a => a.tipo !== 'image').map(arch => (
                               <div key={arch._id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--bg)', borderRadius: '6px', marginBottom: '6px' }}>
                                 <span>📄</span>
-                                <a href={arch.url} target="_blank" rel="noreferrer" style={{ flex: 1, color: 'var(--primary)', fontSize: '0.88rem', wordBreak: 'break-all' }}>
+                                <a href={resolveFileUrl(arch.url)} target="_blank" rel="noreferrer" style={{ flex: 1, color: 'var(--primary)', fontSize: '0.88rem', wordBreak: 'break-all' }}>
                                   {arch.nombre}
                                 </a>
                                 <button
