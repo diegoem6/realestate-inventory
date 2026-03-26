@@ -278,7 +278,7 @@ router.post('/:id/ambientes/:ambienteId/analizar-ia', async (req, res) => {
     const fsSync = require('fs');
     const pathMod = require('path');
 
-    const uploadsDir = pathMod.join(__dirname, '..', process.env.UPLOADS_PATH || 'uploads');
+    const uploadsDir = pathMod.join(__dirname, '../..', process.env.UPLOADS_PATH || 'uploads');
     const mimeFromExt = (name) => {
       const ext = (name || '').split('.').pop().toLowerCase();
       return { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png',
