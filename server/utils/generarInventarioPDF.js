@@ -71,7 +71,7 @@ async function loadImage(urlOrPath) {
   try {
     if (!urlOrPath.startsWith('http')) {
       const lp = urlOrPath.startsWith('/')
-        ? path.join(__dirname, '..', urlOrPath)
+        ? path.join(__dirname, '../..', urlOrPath)
         : path.resolve(urlOrPath);
       if (fs.existsSync(lp)) return fs.readFileSync(lp);
       return null;
