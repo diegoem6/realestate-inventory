@@ -126,7 +126,7 @@ async function generarInventarioPDF(inventario, usuario) {
           try {
             doc.save();
             doc.circle(LX+LS/2, LY+LS/2, LS/2).clip();
-            doc.image(logoBuf, LX, LY, { width: LS, height: LS });
+            doc.image(logoBuf, LX, LY, { cover: [LS, LS] });
             doc.restore();
           } catch { doc.circle(LX+LS/2, LY+LS/2, LS/2).fill(C.primaryMid); }
         } else {
@@ -139,10 +139,10 @@ async function generarInventarioPDF(inventario, usuario) {
         doc.fillColor(C.white).font('Helvetica-Bold').fontSize(14)
            .text(`${safe(usuario.nombre)} ${safe(usuario.apellido)}`, TX, 16, { width: TW, lineBreak: false });
         let iy = 35;
-        doc.font('Helvetica').fontSize(8.5).fillColor('#ffffff99');
+        doc.font('Helvetica').fontSize(8.5).fillColor(C.text);
         if (usuario.email)   { doc.text(usuario.email,   TX, iy, { width: TW, lineBreak: false }); iy += 13; }
         if (usuario.celular) { doc.text(usuario.celular, TX, iy, { width: TW, lineBreak: false }); }
-        doc.fillColor('#ffffff66').font('Helvetica').fontSize(8)
+        doc.fillColor(C.text).font('Helvetica').fontSize(8)
            .text(`Página ${pageNum}`, PW-ML-55, HEADER_H-17, { width: 55, align: 'right', lineBreak: false });
       }
 
@@ -240,7 +240,7 @@ async function generarInventarioPDF(inventario, usuario) {
               // vertical desborden y se superpongan con el siguiente elemento.
               doc.save();
               doc.rect(FX, y, FW, FH).clip();
-              doc.image(buf, FX+2, y+2, { width: FW-4, height: FH-4, cover: [FW-4, FH-4] });
+              doc.image(buf, FX+2, y+2, { fit: [FW-4, FH-4], align: 'center', valign: 'center' });
               doc.restore();
               doc.rect(FX, y, FW, FH).stroke(C.border);
             } catch {
