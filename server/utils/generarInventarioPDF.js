@@ -126,7 +126,7 @@ async function generarInventarioPDF(inventario, usuario) {
           try {
             doc.save();
             doc.circle(LX+LS/2, LY+LS/2, LS/2).clip();
-            doc.image(logoBuf, LX, LY, { cover: [LS, LS] });
+            doc.image(logoBuf, LX, LY, { fit: [LS, LS], align: 'center', valign: 'center' });
             doc.restore();
           } catch { doc.circle(LX+LS/2, LY+LS/2, LS/2).fill(C.primaryMid); }
         } else {
@@ -139,10 +139,10 @@ async function generarInventarioPDF(inventario, usuario) {
         doc.fillColor(C.white).font('Helvetica-Bold').fontSize(14)
            .text(`${safe(usuario.nombre)} ${safe(usuario.apellido)}`, TX, 16, { width: TW, lineBreak: false });
         let iy = 35;
-        doc.font('Helvetica').fontSize(8.5).fillColor(C.text);
+        doc.font('Helvetica').fontSize(8.5).fillColor(C.white);
         if (usuario.email)   { doc.text(usuario.email,   TX, iy, { width: TW, lineBreak: false }); iy += 13; }
         if (usuario.celular) { doc.text(usuario.celular, TX, iy, { width: TW, lineBreak: false }); }
-        doc.fillColor(C.text).font('Helvetica').fontSize(8)
+        doc.fillColor(C.white).font('Helvetica').fontSize(8)
            .text(`Página ${pageNum}`, PW-ML-55, HEADER_H-17, { width: 55, align: 'right', lineBreak: false });
       }
 
